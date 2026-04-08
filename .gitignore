@@ -1,0 +1,39 @@
+# .NET
+bin/
+obj/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Visual Studio Code
+.vscode/
+.history/
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Entity Framework
+Migrations/
+
+# Sensitive files
+appsettings.Development.json
+appsettings.Local.json
+
+# Others
+*.swp
+*.tmp
+*.bak
+*.orig
+*.rej
+
+# Rider
+.idea/
+*.sln.iml
+
+# Test results
+TestResults/
