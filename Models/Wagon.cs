@@ -8,6 +8,7 @@ namespace hakaton_yz_api.Models
         public double Latitude { get; set; }
         public double Longitude { get; set; }
         public string City { get; set; } = string.Empty;
+        public string DestinationCity { get; set; }
         public bool IsAvailable { get; set; }
     }
 }
