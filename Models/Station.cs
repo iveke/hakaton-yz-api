@@ -4,21 +4,22 @@ namespace hakaton_yz_api.Models
 {
     public enum RailwayBranch
     {
-        Південно_Західна, // Філія 1
-        Львівська,        // Філія 2
-        Одеська,          // Філія 3
-        Південна,         // Філія 4
-        Придніпровська    // Філія 5
+        Південно_Західна,
+        Львівська,
+        Одеська,
+        Південна,
+        Придніпровська,
     }
 
     public enum StationType
     {
         ЦентральнийВузол,
-        ЗалізничнаСтанція
+        ЗалізничнаСтанція,
     }
 
     public class Station
     {
+        public int Id { get; set; }
         public string Name { get; set; } = string.Empty;
         public RailwayBranch Branch { get; set; }
         public StationType Type { get; set; }
@@ -28,40 +29,35 @@ namespace hakaton_yz_api.Models
     {
         public static List<Station> AllStations = new List<Station>
         {
-            // Філія 1: Південно-Західна залізниця
-            new Station { Name = "Київ-Пасажирський", Branch = RailwayBranch.Південно_Західна, Type = StationType.ЦентральнийВузол },
-            new Station { Name = "Дарниця", Branch = RailwayBranch.Південно_Західна, Type = StationType.ЗалізничнаСтанція },
-            new Station { Name = "Київ-Волинський", Branch = RailwayBranch.Південно_Західна, Type = StationType.ЗалізничнаСтанція },
-            new Station { Name = "Київ-Деміївський", Branch = RailwayBranch.Південно_Західна, Type = StationType.ЗалізничнаСтанція },
-            new Station { Name = "Київ-Товарний", Branch = RailwayBranch.Південно_Західна, Type = StationType.ЗалізничнаСтанція },
+            new Station { Id = 1, Name = "Київ-Пасажирський", Branch = RailwayBranch.Південно_Західна, Type = StationType.ЦентральнийВузол },
+            new Station { Id = 2, Name = "Дарниця", Branch = RailwayBranch.Південно_Західна, Type = StationType.ЗалізничнаСтанція },
+            new Station { Id = 3, Name = "Київ-Волинський", Branch = RailwayBranch.Південно_Західна, Type = StationType.ЗалізничнаСтанція },
+            new Station { Id = 4, Name = "Київ-Деміївський", Branch = RailwayBranch.Південно_Західна, Type = StationType.ЗалізничнаСтанція },
+            new Station { Id = 5, Name = "Київ-Товарний", Branch = RailwayBranch.Південно_Західна, Type = StationType.ЗалізничнаСтанція },
 
-            // Філія 2: Львівська
-            new Station { Name = "Львів-Головний", Branch = RailwayBranch.Львівська, Type = StationType.ЗалізничнаСтанція },
-            new Station { Name = "Стрий", Branch = RailwayBranch.Львівська, Type = StationType.ЗалізничнаСтанція },
-            new Station { Name = "Чоп", Branch = RailwayBranch.Львівська, Type = StationType.ЗалізничнаСтанція },
-            new Station { Name = "Мостинська 2", Branch = RailwayBranch.Львівська, Type = StationType.ЗалізничнаСтанція },
-            new Station { Name = "Ковель", Branch = RailwayBranch.Львівська, Type = StationType.ЗалізничнаСтанція },
+            new Station { Id = 6, Name = "Львів-Головний", Branch = RailwayBranch.Львівська, Type = StationType.ЗалізничнаСтанція },
+            new Station { Id = 7, Name = "Стрий", Branch = RailwayBranch.Львівська, Type = StationType.ЗалізничнаСтанція },
+            new Station { Id = 8, Name = "Чоп", Branch = RailwayBranch.Львівська, Type = StationType.ЗалізничнаСтанція },
+            new Station { Id = 9, Name = "Мостинська 2", Branch = RailwayBranch.Львівська, Type = StationType.ЗалізничнаСтанція },
+            new Station { Id = 10, Name = "Ковель", Branch = RailwayBranch.Львівська, Type = StationType.ЗалізничнаСтанція },
 
-            // Філія 3: Одеська
-            new Station { Name = "Одеса-Головна", Branch = RailwayBranch.Одеська, Type = StationType.ЗалізничнаСтанція },
-            new Station { Name = "Чорноморськ-Порт", Branch = RailwayBranch.Одеська, Type = StationType.ЗалізничнаСтанція },
-            new Station { Name = "Ізмаїл", Branch = RailwayBranch.Одеська, Type = StationType.ЗалізничнаСтанція },
-            new Station { Name = "Роздільна", Branch = RailwayBranch.Одеська, Type = StationType.ЗалізничнаСтанція },
-            new Station { Name = "Помічна", Branch = RailwayBranch.Одеська, Type = StationType.ЗалізничнаСтанція },
+            new Station { Id = 11, Name = "Одеса-Головна", Branch = RailwayBranch.Одеська, Type = StationType.ЗалізничнаСтанція },
+            new Station { Id = 12, Name = "Чорноморськ-Порт", Branch = RailwayBranch.Одеська, Type = StationType.ЗалізничнаСтанція },
+            new Station { Id = 13, Name = "Ізмаїл", Branch = RailwayBranch.Одеська, Type = StationType.ЗалізничнаСтанція },
+            new Station { Id = 14, Name = "Роздільна", Branch = RailwayBranch.Одеська, Type = StationType.ЗалізничнаСтанція },
+            new Station { Id = 15, Name = "Помічна", Branch = RailwayBranch.Одеська, Type = StationType.ЗалізничнаСтанція },
 
-            // Філія 4: Південна
-            new Station { Name = "Харків-Пасажирський", Branch = RailwayBranch.Південна, Type = StationType.ЗалізничнаСтанція },
-            new Station { Name = "Харків-Сортувальний", Branch = RailwayBranch.Південна, Type = StationType.ЗалізничнаСтанція },
-            new Station { Name = "Лозова", Branch = RailwayBranch.Південна, Type = StationType.ЗалізничнаСтанція },
-            new Station { Name = "Полтава-Київська", Branch = RailwayBranch.Південна, Type = StationType.ЗалізничнаСтанція },
-            new Station { Name = "Кременчук", Branch = RailwayBranch.Південна, Type = StationType.ЗалізничнаСтанція },
+            new Station { Id = 16, Name = "Харків-Пасажирський", Branch = RailwayBranch.Південна, Type = StationType.ЦентральнийВузол },
+            new Station { Id = 17, Name = "Мерефа", Branch = RailwayBranch.Південна, Type = StationType.ЗалізничнаСтанція },
+            new Station { Id = 18, Name = "Лозова", Branch = RailwayBranch.Південна, Type = StationType.ЗалізничнаСтанція },
+            new Station { Id = 19, Name = "Куп'янськ", Branch = RailwayBranch.Південна, Type = StationType.ЗалізничнаСтанція },
+            new Station { Id = 20, Name = "Слов'янськ", Branch = RailwayBranch.Південна, Type = StationType.ЗалізничнаСтанція },
 
-            // Філія 5: Придніпровська
-            new Station { Name = "Дніпро-Головний", Branch = RailwayBranch.Придніпровська, Type = StationType.ЗалізничнаСтанція },
-            new Station { Name = "Нижньодніпровськ", Branch = RailwayBranch.Придніпровська, Type = StationType.ЗалізничнаСтанція },
-            new Station { Name = "Кам'янське", Branch = RailwayBranch.Придніпровська, Type = StationType.ЗалізничнаСтанція },
-            new Station { Name = "Нікополь", Branch = RailwayBranch.Придніпровська, Type = StationType.ЗалізничнаСтанція },
-            new Station { Name = "Апостолове", Branch = RailwayBranch.Придніпровська, Type = StationType.ЗалізничнаСтанція }
+            new Station { Id = 21, Name = "Дніпро-Головний", Branch = RailwayBranch.Придніпровська, Type = StationType.ЦентральнийВузол },
+            new Station { Id = 22, Name = "Запоріжжя-1", Branch = RailwayBranch.Придніпровська, Type = StationType.ЗалізничнаСтанція },
+            new Station { Id = 23, Name = "Кривий Ріг-Головний", Branch = RailwayBranch.Придніпровська, Type = StationType.ЗалізничнаСтанція },
+            new Station { Id = 24, Name = "Павлоград", Branch = RailwayBranch.Придніпровська, Type = StationType.ЗалізничнаСтанція },
+            new Station { Id = 25, Name = "Синельникове", Branch = RailwayBranch.Придніпровська, Type = StationType.ЗалізничнаСтанція }
         };
     }
 }

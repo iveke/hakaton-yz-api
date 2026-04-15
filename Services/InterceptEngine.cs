@@ -5,51 +5,40 @@ using hakaton_yz_api.Models;
 
 namespace hakaton_yz_api.Services
 {
-    /// <summary>
-    /// Interface for the intercept engine.
-    /// </summary>
     public interface IInterceptEngine
     {
-        /// <summary>
-        /// Attempts to find the best wagon to intercept for a new shipment.
-        /// </summary>
-        /// <param name="wagons">The list of wagons to consider.</param>
-        /// <param name="newShipment">The new shipment to be handled.</param>
-        /// <returns>An intercept proposal with the best wagon and savings, if successful.</returns>
         InterceptProposal TryFindIntercept(List<Wagon> wagons, Shipment newShipment);
     }
 
-    /// <summary>
-    /// Implementation of the intercept engine.
-    /// </summary>
     public class InterceptEngine : IInterceptEngine
     {
         private const double MaxInterceptRadiusKm = 200.0;
-        private readonly IDistanceCalculator _distanceCalculator;
+        private const decimal EmptyRunCostPerKm = 20m;
+        private const decimal SortingStationBonus = 500m;
+        private const decimal MinSavingsThresholdUah = 1000m;
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="InterceptEngine"/> class.
-        /// </summary>
-        /// <param name="distanceCalculator">The distance calculator to use.</param>
-        public InterceptEngine(IDistanceCalculator distanceCalculator)
+        private readonly IGeoCalculator _geoCalculator;
+
+        public InterceptEngine(IGeoCalculator geoCalculator)
         {
-            _distanceCalculator = distanceCalculator;
+            _geoCalculator = geoCalculator;
         }
 
-        /// <inheritdoc />
         public InterceptProposal TryFindIntercept(List<Wagon> wagons, Shipment newShipment)
         {
-            var movingWagons = wagons.Where(w => w.IsMoving && w.TargetCity != null).ToList();
+            var compatibleWagons = wagons
+                .Where(w => IsCompatible(w.Type, newShipment.Cargo))
+                .ToList();
 
             Wagon? bestWagon = null;
-            double maxSavings = 0;
+            decimal maxSavings = 0;
             double bestDistanceToNewLoad = 0;
 
-            foreach (var wagon in movingWagons)
+            foreach (var wagon in compatibleWagons)
             {
-                double distanceToNewLoad = _distanceCalculator.GetDistance(
-                    wagon.City,
-                    newShipment.FromCity
+                double distanceToNewLoad = _geoCalculator.GetDistance(
+                    wagon.CurrentStationId,
+                    newShipment.FromStationId
                 );
 
                 if (distanceToNewLoad > MaxInterceptRadiusKm)
@@ -57,31 +46,68 @@ namespace hakaton_yz_api.Services
                     continue;
                 }
 
-                double distanceToOldTarget = _distanceCalculator.GetDistance(
-                    wagon.City,
-                    wagon.TargetCity!
-                );
-                double savings = distanceToOldTarget - distanceToNewLoad;
-
-                if (savings > maxSavings)
+                if (wagon.TargetStationId.HasValue)
                 {
-                    bestWagon = wagon;
-                    maxSavings = savings;
-                    bestDistanceToNewLoad = distanceToNewLoad;
+                    decimal oldDistanceToTarget = (decimal)
+                        _geoCalculator.GetDistance(
+                            wagon.CurrentStationId,
+                            wagon.TargetStationId.Value
+                        );
+                    decimal newLoadDistance = (decimal)
+                        _geoCalculator.GetDistance(
+                            wagon.CurrentStationId,
+                            newShipment.FromStationId
+                        );
+                    decimal savings =
+                        oldDistanceToTarget * EmptyRunCostPerKm
+                        - newLoadDistance * EmptyRunCostPerKm;
+
+                    if (wagon.IsOnSortingStation)
+                    {
+                        savings += SortingStationBonus;
+                    }
+
+                    if (savings > maxSavings)
+                    {
+                        bestWagon = wagon;
+                        maxSavings = savings;
+                        bestDistanceToNewLoad = distanceToNewLoad;
+                    }
                 }
             }
 
-            if (bestWagon == null)
+            if (maxSavings < MinSavingsThresholdUah || bestWagon == null)
             {
-                return new InterceptProposal { IsSuccessful = false };
+                return new InterceptProposal { IsFound = false };
             }
 
             return new InterceptProposal
             {
-                IsSuccessful = true,
+                IsFound = true,
                 SuggestedWagon = bestWagon,
-                SavedDistanceKm = maxSavings,
+                SavedMoneyUah = maxSavings,
+                SavedDistanceKm =
+                    (
+                        bestWagon.TargetStationId.HasValue
+                            ? _geoCalculator.GetDistance(
+                                bestWagon.CurrentStationId,
+                                bestWagon.TargetStationId.Value
+                            )
+                            : 0
+                    ) - bestDistanceToNewLoad,
                 DistanceToNewLoad = bestDistanceToNewLoad,
+            };
+        }
+
+        private static bool IsCompatible(WagonType wagonType, CargoType cargoType)
+        {
+            return (wagonType, cargoType) switch
+            {
+                (WagonType.OpenTop, CargoType.Ore) => true,
+                (WagonType.OpenTop, CargoType.Rubble) => true,
+                (WagonType.GrainHopper, CargoType.Grain) => true,
+                (WagonType.CementWagon, CargoType.Cement) => true,
+                _ => false,
             };
         }
     }
