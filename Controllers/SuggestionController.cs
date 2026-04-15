@@ -24,21 +24,21 @@ public class SuggestionController : ControllerBase
     [HttpGet("{shipmentId}")]
     public async Task<IActionResult> GetSuggestion(Guid shipmentId)
     {
-        Shipment? shipment = await _context.Shipments.FindAsync(shipmentId);
+        var shipment = await _context.Shipments.FindAsync(shipmentId);
         if (shipment == null)
         {
             return NotFound("Shipment not found");
         }
 
-        List<Wagon> availableWagons = await _context.Wagons.Where(w => w.IsAvailable).ToListAsync();
-        
-        IEnumerable<object>? suggestions = _algorithmService.SuggestBestWagons(availableWagons, shipment);
-        
-        if (suggestions == null || !suggestions.Any())
-        {
-            return NotFound("No available wagons found");
-        }
+        var allWagons = await _context.Wagons.ToListAsync();
+        var allShipments = await _context.Shipments.ToListAsync();
 
-        return Ok(suggestions);
+        var proposals = await _algorithmService.MatchWagonsToShipments(allWagons, allShipments);
+        var filtered = proposals.Where(p => p.Shipment != null && p.Shipment.Id == shipmentId).ToList();
+        if (!filtered.Any())
+        {
+            return NotFound("No suitable wagons found");
+        }
+        return Ok(filtered);
     }
 }

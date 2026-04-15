@@ -47,3 +47,5 @@ namespace hakaton_yz_api.Services
         {
             return angle * (Math.PI / 180);
         }
+    }
+}

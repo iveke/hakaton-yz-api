@@ -2,56 +2,86 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using hakaton_yz_api.Models;
+using System.Threading.Tasks;
 
 namespace hakaton_yz_api.Services
 {
     public class AlgorithmService
     {
-        private const decimal CostPerKmEmpty = 20.0m;
-        private const double AverageSpeedKmPerHour = 50.0;
+        private readonly ICostMatrixService _costMatrixService;
+        private readonly IInterceptEngine _interceptEngine;
+        private readonly HotOfferService _hotOfferService;
 
-        private readonly IDistanceService _distanceService;
-        public AlgorithmService(IDistanceService distanceService)
+        public AlgorithmService(
+            ICostMatrixService costMatrixService,
+            IInterceptEngine interceptEngine,
+            HotOfferService hotOfferService)
         {
-            _distanceService = distanceService;
+            _costMatrixService = costMatrixService;
+            _interceptEngine = interceptEngine;
+            _hotOfferService = hotOfferService;
         }
 
-        public IEnumerable<object> SuggestBestWagons(List<Wagon> availableWagons, Shipment shipment)
+        /// <summary>
+        /// Головний pipeline для підбору вагонів під заявки з урахуванням усіх бізнес-правил.
+        /// </summary>
+        public async Task<List<AssignmentProposal>> MatchWagonsToShipments(
+            List<Wagon> wagons,
+            List<Shipment> shipments)
         {
-            if (availableWagons == null || !availableWagons.Any())
+            // 1. Відфільтрувати доступні вагони та непідтверджені заявки
+            var availableWagons = wagons.Where(w => w.IsAvailable).ToList();
+            var pendingShipments = shipments.Where(s => !s.IsAssigned && s.Status == "Pending").ToList();
+
+            // 2. Розрахувати матрицю вартостей
+            var costEdges = _costMatrixService.CostMatrix(availableWagons, pendingShipments);
+
+            // 3. Для кожної заявки знайти найкращий вагон (мінімальна TotalCost)
+            var proposals = new List<AssignmentProposal>();
+            foreach (var shipment in pendingShipments)
             {
-                return null;
-            }
+                var bestEdge = costEdges
+                    .Where(e => e.ShipmentId == shipment.Id)
+                    .OrderBy(e => e.TotalCost)
+                    .FirstOrDefault();
+                if (bestEdge == null) continue;
 
-            // TODO: implement optimization algorithm
+                var wagon = availableWagons.FirstOrDefault(w => w.Id == bestEdge.WagonId);
+                if (wagon == null) continue;
 
-            // Mock logic: Take up to 3 wagons, sort them by fake distances
-            var suggestions = new List<WagonSuggestion>();
+                // 4. Перевірити можливість інтерцепту
+                var intercept = _interceptEngine.TryFindIntercept(availableWagons, shipment);
 
-            foreach (var wagon in availableWagons)
-            {
-                double distance = _distanceService.GetDistanceInKm(
-                    wagon.City, shipment.FromCity,
-                    wagon.Latitude, wagon.Longitude,
-                    shipment.FromLat, shipment.FromLon
-                );
-                decimal emptyRunCost = (decimal)distance * CostPerKmEmpty;
-                double hoursInTransit = distance / AverageSpeedKmPerHour;
-                int daysInTransit = (int)Math.Ceiling(hoursInTransit / 24.0);
+                // 5. Додати гарячі пропозиції
+                var hotOffers = _hotOfferService.GenerateOffers(availableWagons);
+                var hotOffer = hotOffers.FirstOrDefault(o => o.WagonId == wagon.Id);
 
-                suggestions.Add(new WagonSuggestion
+                proposals.Add(new AssignmentProposal
                 {
-                    WagonId = wagon.Id,
-                    CurrentCity = wagon.City,
-                    DistanceKm = Math.Round(distance, 2),
-                    EmptyRunCost = Math.Round(emptyRunCost, 2),
-                    EstimatedDaysInTransit = daysInTransit == 0 ? 1 : daysInTransit
+                    Wagon = wagon,
+                    Shipment = shipment,
+                    TotalCost = bestEdge.TotalCost,
+                    DistanceKm = bestEdge.DistanceKm,
+                    Intercept = intercept,
+                    HotOffer = hotOffer
                 });
             }
 
-            return suggestions
-                .OrderBy(s => s.DistanceKm)
-                .Take(topCount);
+            // 6. Видаємо список пропозицій для підтвердження (можна сортувати за TotalCost)
+            return proposals.OrderBy(p => p.TotalCost).ToList();
         }
+    }
+
+    /// <summary>
+    /// DTO для пропозиції призначення вагона на заявку
+    /// </summary>
+    public class AssignmentProposal
+    {
+        public Wagon? Wagon { get; set; }
+        public Shipment? Shipment { get; set; }
+        public decimal TotalCost { get; set; }
+        public double DistanceKm { get; set; }
+        public InterceptProposal? Intercept { get; set; }
+        public HotOffer? HotOffer { get; set; }
     }
 }

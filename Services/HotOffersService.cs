@@ -1,6 +1,6 @@
 ﻿using hakaton_yz_api.Models;
 
-namespace hakaton_yz_api
+namespace hakaton_yz_api.Services
 {
     public class HotOfferService
     {

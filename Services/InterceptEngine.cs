@@ -78,14 +78,18 @@ namespace hakaton_yz_api.Services
 
             if (maxSavings < MinSavingsThresholdUah || bestWagon == null)
             {
-                return new InterceptProposal { IsFound = false };
+                return new InterceptProposal {
+                    IsSuccessful = false,
+                    SuggestedWagon = null,
+                    SavedDistanceKm = 0,
+                    DistanceToNewLoad = 0
+                };
             }
 
             return new InterceptProposal
             {
-                IsFound = true,
+                IsSuccessful = true,
                 SuggestedWagon = bestWagon,
-                SavedMoneyUah = maxSavings,
                 SavedDistanceKm =
                     (
                         bestWagon.TargetStationId.HasValue
@@ -95,7 +99,7 @@ namespace hakaton_yz_api.Services
                             )
                             : 0
                     ) - bestDistanceToNewLoad,
-                DistanceToNewLoad = bestDistanceToNewLoad,
+                DistanceToNewLoad = bestDistanceToNewLoad
             };
         }
 
